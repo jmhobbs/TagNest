@@ -60,6 +60,10 @@ class TagNestUtil:
 		self.cursor.execute( "INSERT INTO log ( [datetime], [message], [level] ) VALUES ( ?, ?, ? )", ( when, message, level ) )
 		self.connection.commit()
 
+	def get_log_entries ( self, count, last ):
+		self.cursor.execute( "SELECT datetime, message, level FROM log WHERE datetime > ? ORDER BY datetime DESC LIMIT 0,?", ( last, count ) )
+		return self.cursor.fetchall()
+
 	def get_dir_hash ( self, path ):
 		self.cursor.execute( "SELECT hash FROM directory WHERE path = ?", ( path, ) )
 		row = self.cursor.fetchone()

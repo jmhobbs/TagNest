@@ -75,7 +75,7 @@ def run():
 		end_time = time.time()
 		util.log( "Daemon: Finished walk in %s seconds." % ( end_time - start_time ), util.LOG_INFO )
 
-		time.sleep( 60 ) # TODO: Config this
+		time.sleep( 120 ) # TODO: Config this
 
 if __name__ == "__main__":
 	run()

@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+# Handy widget guide: http://www.informit.com/articles/article.aspx?p=1405224&seqNum=6
+
+
 import sys
 from PyQt4 import QtCore, QtGui
 
@@ -42,15 +45,58 @@ class BaseWindow ( QtGui.QWidget ):
 		self.hide();
 		event.ignore();
 
+class VBoxWrapper ( QtGui.QWidget ):
+	def __init__ ( self, parent=None ):
+		QtGui.QWidget.__init__( self, parent );
+		self.vbox = QtGui.QVBoxLayout();
+		self.setLayout( self.vbox );
+		self.vbox.addStretch( 1 );
+
+	def box ( self ):
+		return self.vbox;
+
 class LogWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
 		BaseWindow.__init__( self, parent );
+
+		self.hide()
+
 		self.setWindowTitle( "TagNest Log" );
-		aboutLabel = QtGui.QLabel();
-		aboutLabel.setText( "Log!" );
-		vbox = QtGui.QVBoxLayout();
-		vbox.addWidget( aboutLabel )
+		self.resize( 500, 300 );
+
+		self.util = TagNestUtil( "tagnest.db3" ) # TODO: Config this?
+
+		vbw = VBoxWrapper()
+		vbw.show()
+
+		self.scroll = QtGui.QScrollArea()
+		self.scroll.setWidgetResizable( True );
+		self.scroll.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOn );
+		self.scroll.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff );
+		self.scroll.setWidget( vbw )
+
+		self.last_log = 0
+		self.update_logs( True )
+
+		vbox = QtGui.QVBoxLayout()
+		vbox.addWidget( self.scroll )
 		self.setLayout( vbox )
+
+		self.timer = QtCore.QTimer()
+		QtCore.QObject.connect( self.timer, QtCore.SIGNAL("timeout()"), self.update_logs )
+		self.timer.start( 5000 )
+
+	# TODO: On show/hide do a refresh?
+	# TODO: How much to show at a time?
+
+	def update_logs ( self, force=False ):
+		if force or self.isVisible():
+			entries = self.util.get_log_entries( 20, self.last_log )
+			entries.reverse()
+			for entry in entries:
+				label = QtGui.QLabel( "%s - %s" % ( entry[0], entry[1] ) )
+				self.scroll.widget().box().insertWidget( 0, label );
+				self.last_log = entry[0]
 
 class TagNest( QtGui.QApplication ):
 
