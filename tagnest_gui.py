@@ -26,17 +26,17 @@ THE SOFTWARE.
 
 
 import sys
-from PyQt4 import QtCore, QtGui
-
 from multiprocessing import Process, freeze_support
-
+import ConfigParser
 import time
+
+from PyQt4 import QtCore, QtGui
 
 import tagnest_daemon
 from tagnest import TagNestUtil
 
 def daemon ():
-	tagnest_daemon.run()
+	tagnest_daemon.run( config )
 
 # Base window that doesn't exit the app when closed.
 class BaseWindow ( QtGui.QWidget ):
@@ -64,9 +64,7 @@ class LogWindow ( BaseWindow ):
 		self.hide()
 
 		self.setWindowTitle( "TagNest - Log" );
-		self.resize( 500, 300 );
-
-		self.util = TagNestUtil( "tagnest.db3" ) # TODO: Config this?
+		self.resize( 600, 300 );
 
 		vbw = VBoxWrapper()
 		vbw.show()
@@ -93,16 +91,18 @@ class LogWindow ( BaseWindow ):
 
 	def update_logs ( self, force=False ):
 		if force or self.isVisible():
-			entries = self.util.get_log_entries( 20, self.last_log )
+			entries = util.get_log_entries( 20, self.last_log )
 			entries.reverse()
 			for entry in entries:
 				label = QtGui.QLabel( "%s | %s" % ( time.strftime( '%Y-%m-%d %H:%M:%S', time.localtime( entry[0] ) ), entry[1] ) )
 
-				if entry[2] == self.util.LOG_INFO:
+				if entry[2] == util.LOG_INFO:
+					label.setStyleSheet( "QWidget { background-color: #99FFFF }" )
+				elif entry[2] == util.LOG_EVENT:
 					label.setStyleSheet( "QWidget { background-color: #99FF99 }" )
-				elif entry[2] == self.util.LOG_WARN:
+				elif entry[2] == util.LOG_WARN:
 					label.setStyleSheet( "QWidget { background-color: #FFFF99 }" )
-				elif entry[2] == self.util.LOG_FATAL:
+				elif entry[2] == util.LOG_FATAL:
 					label.setStyleSheet( "QWidget { background-color: #FF9999 }" )
 				else:
 					label.setStyleSheet( "QWidget { background-color: #FFCC99 }" )
@@ -128,8 +128,6 @@ class NewWindow ( BaseWindow ):
 		self.setWindowTitle( "TagNest - New" );
 		self.resize( 500, 300 );
 
-		self.util = TagNestUtil( "tagnest.db3" ) # TODO: Config this?
-
 		vbw = VBoxWrapper()
 		vbw.show()
 
@@ -151,7 +149,7 @@ class NewWindow ( BaseWindow ):
 
 	def update_list ( self, force=False ):
 		if force or self.isVisible():
-			print "update list"
+			pass
 			#self.scroll.widget().box().insertWidget( 0, label );
 
 class TagNest( QtGui.QApplication ):
@@ -162,9 +160,10 @@ class TagNest( QtGui.QApplication ):
 		self.setWindowIcon( QtGui.QIcon( 'resource/icon.png' ) )
 
 		self.daemon = None
-		self.util = TagNestUtil( "tagnest.db3" ) # TODO: Config this?
 
-		self.util.log( "GUI Started.", self.util.LOG_INFO )
+		util.log( "GUI Started.", util.LOG_EVENT )
+		util.log( "File root: %s" % ( config.get( 'Shared', 'fileroot' ) ), util.LOG_INFO )
+		util.log( "Log refresh rate: %s" % ( config.getint( 'GUI', 'logrefresh' ) ), util.LOG_INFO )
 
 		self.log_window = LogWindow()
 
@@ -194,8 +193,8 @@ class TagNest( QtGui.QApplication ):
 
 	def check_daemon ( self ):
 		if None != self.daemon and False == self.daemon.is_alive():
-			self.util.log( "Daemon found dead!", self.util.LOG_FATAL )
-			self.util.log( "Restarting daemon.", self.util.LOG_WARN )
+			util.log( "Daemon found dead!", util.LOG_FATAL )
+			util.log( "Restarting daemon.", util.LOG_WARN )
 			self.daemon = None
 			self.start_daemon()
 
@@ -209,21 +208,27 @@ class TagNest( QtGui.QApplication ):
 		if None != self.daemon:
 			self.daemon.terminate()
 			self.daemon = None
-			self.util.log( "Daemon stopped by GUI.", self.util.LOG_INFO )
+			util.log( "Daemon stopped by GUI.", util.LOG_EVENT )
 		self.daemon_control.setText( "Start Daemon" )
 
 	def start_daemon ( self ):
 		if None == self.daemon:
 			self.daemon = Process( target=daemon )
 			self.daemon.start()
-			self.util.log( "Daemon started by GUI.", self.util.LOG_INFO )
+			util.log( "Daemon started by GUI.", util.LOG_EVENT )
 		self.daemon_control.setText( "Stop Daemon" )
 
 	def quit_clean( self ):
 		self.stop_daemon()
-		self.util.log( "GUI Stopped", self.util.LOG_INFO )
+		util.log( "GUI Stopped", util.LOG_EVENT )
 		self.quit()
 
 if __name__ == "__main__":
+
+	config = ConfigParser.RawConfigParser()
+	config.read( 'tagnest.config' )
+
+	util = TagNestUtil( config.get( 'Shared', 'database' ) )
+
 	app = TagNest( sys.argv );
 	sys.exit( app.exec_() );

@@ -29,17 +29,22 @@ THE SOFTWARE.
 from tagnest import TagNestUtil
 import time
 import os
+import ConfigParser
 
+def run ( config ):
 
-def run():
-	util = TagNestUtil( "tagnest.db3" ) # TODO: Config this?
+	util = TagNestUtil( config.get( 'Shared', 'database' ) )
+
+	util.log( "Daemon: File root: %s" % ( config.get( 'Shared', 'fileroot' ) ), util.LOG_INFO )
+	util.log( "Daemon: Refresh interval: %s" % ( config.getint( 'Daemon', 'Sleep' ) ), util.LOG_INFO )
+
 	while True:
 		start_time = time.time()
-		for path, dirs, files in os.walk( 'files/' ):
+		for path, dirs, files in os.walk( config.get( 'Shared', 'fileroot' ) ):
 			dh = util.hash_dir( files, dirs )
 			ch = util.get_dir_hash( path )
 			if dh != ch:
-				util.log( "Daemon: Directory has changed, " + path, util.LOG_INFO )
+				util.log( "Daemon: Directory has changed, " + path, util.LOG_EVENT )
 				util.set_dir_hash( path, dh )
 
 			FilesInDir = util.get_files_in_dir( path )
@@ -53,7 +58,7 @@ def run():
 				if '' == ch:
 					matches = util.find_file_matches( file, fh )
 					if None == matches:
-						util.log( "Daemon: New file, %s/%s" % ( path, file ), util.LOG_INFO )
+						util.log( "Daemon: New file, %s/%s" % ( path, file ), util.LOG_EVENT )
 						util.new_file( file, path, fh )
 					else:
 						for pmatch in matches:
@@ -79,9 +84,11 @@ def run():
 				util.touch_file( file, path )
 
 		end_time = time.time()
-		util.log( "Daemon: Finished walk in %s seconds." % ( end_time - start_time ), util.LOG_INFO )
+		util.log( "Daemon: Finished walk in %0.3f seconds." % ( end_time - start_time ), util.LOG_EVENT )
 
-		time.sleep( 60 ) # TODO: Config this
+		time.sleep( config.getint( 'Daemon', 'Sleep' ) )
 
 if __name__ == "__main__":
-	run()
+	config = ConfigParser.RawConfigParser()
+	config.read( 'tagnest.config' )
+	run( config )

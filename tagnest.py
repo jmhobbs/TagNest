@@ -34,7 +34,8 @@ class TagNestUtil:
 		self.connection = sqlite3.connect( database )
 		self.cursor = self.connection.cursor()
 
-		self.LOG_INFO = 1
+		self.LOG_INFO = 0
+		self.LOG_EVENT = 1
 		self.LOG_WARN = 2
 		self.LOG_FATAL = 3
 

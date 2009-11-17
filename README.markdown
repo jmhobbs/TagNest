@@ -7,7 +7,11 @@ TagNest will not edit your files or directories, it just sets up a database that
 
 ## Screen Shots ##
 
+### Log Window ###
 ![v0.1 Log Window](http://github.com/jmhobbs/TagNest/raw/master/screens/0.1/log.jpg)
+
+### System Tray ###
+![v0.1 System Tray](http://github.com/jmhobbs/TagNest/raw/master/screens/0.1/tray.jpg)
 
 ## Design ##
 
