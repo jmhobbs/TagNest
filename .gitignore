@@ -1,0 +1,4 @@
+*.pyc
+files/*
+pyPdf/*
+*.db3
