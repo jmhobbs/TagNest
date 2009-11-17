@@ -34,12 +34,12 @@ import os
 def run():
 	util = TagNestUtil( "tagnest.db3" ) # TODO: Config this?
 	while True:
+		start_time = time.time()
 		for path, dirs, files in os.walk( 'files/' ):
 			dh = util.hash_dir( files, dirs )
 			ch = util.get_dir_hash( path )
-			print "Checking hash for %s, db says it is %s" % ( path, ch )
 			if dh != ch:
-				print "Setting hash for %s to %s" % ( path, dh )
+				util.log( "Daemon: Directory has changed, " + path, util.LOG_INFO )
 				util.set_dir_hash( path, dh )
 
 			FilesInDir = util.get_files_in_dir( path )
@@ -50,15 +50,15 @@ def run():
 					pass
 				fh = util.hash_file( file, path )
 				ch = util.get_file_hash( file, path )
-				print "%s - %s : %s" % ( file, fh, ch )
 				if '' == ch:
 					matches = util.find_file_matches( file, fh )
 					if None == matches:
+						util.log( "Daemon: New file, %s/%s" % ( path, file ), util.LOG_INFO )
 						util.new_file( file, path, fh )
 					else:
 						for pmatch in matches:
 							if False == os.path.isfile( pmatch[1] + "/" + pmatch[0]):
-								print "Found a moved copy of %s, moving it." % ( file )
+								util.log( "Daemon: Moving %s from %s/%s to %s/%s." % ( pmatch[2], pmatch[1], pmatch[0], path, file ), util.LOG_INFO )
 								util.move_file( pmatch[2], file, path, fh )
 								break
 				elif fh != ch:
@@ -67,10 +67,13 @@ def run():
 					util.touch_file( file, path )
 
 			for file in FilesInDir:
-				print "Missing file:", file
+				util.log( "Daemon: Found missing file, %s/%s" % ( path, file ), util.LOG_WARN )
 				util.mark_file_as_missing( file, path )
 
 		util.clear_missing_files()
+
+		end_time = time.time()
+		util.log( "Daemon: Finished walk in %s seconds." % ( end_time - start_time ), util.LOG_INFO )
 
 		time.sleep( 60 ) # TODO: Config this
 

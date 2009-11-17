@@ -55,7 +55,9 @@ class TagNestUtil:
 		return h.hexdigest()
 
 	def log ( self, message, level ):
-		self.cursor.execute( "INSERT INTO log ( [datetime], [message], [level] ) VALUES ( ?, ?, ? )", ( time.time(), message, level ) )
+		when = time.time()
+		print "%s: %s" % ( when, message )
+		self.cursor.execute( "INSERT INTO log ( [datetime], [message], [level] ) VALUES ( ?, ?, ? )", ( when, message, level ) )
 		self.connection.commit()
 
 	def get_dir_hash ( self, path ):
