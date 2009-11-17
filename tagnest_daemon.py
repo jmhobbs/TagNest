@@ -58,7 +58,7 @@ def run():
 					else:
 						for pmatch in matches:
 							if False == os.path.isfile( pmatch[1] + "/" + pmatch[0]):
-								util.log( "Daemon: Moving %s from %s/%s to %s/%s." % ( pmatch[2], pmatch[1], pmatch[0], path, file ), util.LOG_INFO )
+								util.log( "Daemon: Moving %s from %s/%s to %s/%s." % ( pmatch[2], pmatch[1], pmatch[0], path, file ), util.LOG_WARN )
 								util.move_file( pmatch[2], file, path, fh )
 								break
 				elif fh != ch:
@@ -67,15 +67,21 @@ def run():
 					util.touch_file( file, path )
 
 			for file in FilesInDir:
-				util.log( "Daemon: Found missing file, %s/%s" % ( path, file ), util.LOG_WARN )
+				util.log( "Daemon: Missing file, %s/%s" % ( path, file ), util.LOG_WARN )
 				util.mark_file_as_missing( file, path )
 
-		util.clear_missing_files()
+		missing = util.get_missing_files()
+		for file in missing:
+			if False == os.path.isfile( pmatch[1] + pmatch[0]):
+				util.log( "Daemon: Deleting entry for missing file, %s/%s" % ( pmatch[1], pmatch[0] ), util.LOG_WARN )
+				util.delete_file( pmatch[2] )
+			else:
+				util.touch_file( file, path )
 
 		end_time = time.time()
 		util.log( "Daemon: Finished walk in %s seconds." % ( end_time - start_time ), util.LOG_INFO )
 
-		time.sleep( 120 ) # TODO: Config this
+		time.sleep( 60 ) # TODO: Config this
 
 if __name__ == "__main__":
 	run()

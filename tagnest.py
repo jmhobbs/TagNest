@@ -56,7 +56,7 @@ class TagNestUtil:
 
 	def log ( self, message, level ):
 		when = time.time()
-		print "%s: %s" % ( when, message )
+		#print "%s: %s" % ( when, message )
 		self.cursor.execute( "INSERT INTO log ( [datetime], [message], [level] ) VALUES ( ?, ?, ? )", ( when, message, level ) )
 		self.connection.commit()
 
@@ -113,8 +113,12 @@ class TagNestUtil:
 		self.cursor.execute( "UPDATE file SET missing = ? WHERE filename = ? AND path = ?", ( missingcount, file, path ) )
 		self.connection.commit()
 
-	def clear_missing_files( self ):
-		self.cursor.execute( "DELETE FROM file WHERE missing > 2" )
+	def get_missing_files( self ):
+		self.cursor.execute( "SELECT filename, path, id FROM file WHERE missing > 2" )
+		return self.cursor.fetchall()
+
+	def delete_file( self, id ):
+		self.cursor.execute( "DELETE FROM file WHERE id = ?", ( id, ) )
 		self.connection.commit()
 
 	def find_file_matches( self, file, hash ):
