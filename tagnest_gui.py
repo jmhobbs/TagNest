@@ -111,6 +111,32 @@ class LogWindow ( BaseWindow ):
 				self.scroll.widget().box().insertWidget( 0, label );
 				self.last_log = entry[0]
 
+class FileView ( QtGui.QFrame ):
+	def __init__ ( self, args, row ):
+		QtGui.QVBoxLayout.__init__( self, args )
+
+		self.vbox = QtGui.QVBoxLayout()
+		self.vbox.setSpacing( 0 )
+		self.data = row
+
+		# TODO: Figure out how to make a border, or backgroun or something.
+		#self.setStyleSheet( "QWidget { background-color: #CCFFE6; }" )
+		self.setLayout( self.vbox )
+
+		label = QtGui.QLabel( row[2] + row[1] )
+		self.vbox.addWidget( label )
+
+		hbox = QtGui.QHBoxLayout()
+
+		self.tags = QtGui.QLabel( 'tags, tags, tags' )
+		hbox.addWidget( self.tags )
+
+		button = QtGui.QPushButton( "Edit Tags" )
+		hbox.addWidget( button )
+		hbox.setStretch( 0, 1 )
+
+		self.vbox.addLayout( hbox )
+
 class SearchWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
 		BaseWindow.__init__( self, parent );
@@ -149,17 +175,6 @@ class SearchWindow ( BaseWindow ):
 		self.query.setEnabled( False )
 		# TODO: Complete the searching piece here
 
-class FileView ( QtGui.QVBoxLayout ):
-	def __init__ ( self, args, row ):
-		QtGui.QVBoxLayout.__init__( self, args )
-
-		self.data = row
-
-		self.nameLabel = QtGui.QLabel( row[1] )
-		self.addWidget( self.nameLabel )
-		self.pathLabel = QtGui.QLabel( row[2] )
-		self.addWidget( self.pathLabel )
-
 class NeedTagsWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
 		BaseWindow.__init__( self, parent );
@@ -169,8 +184,13 @@ class NeedTagsWindow ( BaseWindow ):
 		self.setWindowTitle( "TagNest - New" );
 		self.resize( 500, 300 );
 
+		self.file_views = []
+
 		vbw = VBoxWrapper()
 		vbw.show()
+
+		#f = FileView( None, [ 1, 'file.name', 'files/what/ever/', 'tag, tag, tag'] )
+		#vbw.box().insertWidget( 0, f )
 
 		self.scroll = QtGui.QScrollArea()
 		self.scroll.setWidgetResizable( True );
@@ -190,8 +210,16 @@ class NeedTagsWindow ( BaseWindow ):
 
 	def update_list ( self, force=False ):
 		if force or self.isVisible():
-			pass
-			#self.scroll.widget().box().insertWidget( 0, label );
+			for file_view in self.file_views:
+				self.scroll.widget().box().removeWidget( file_view )
+
+			self.file_views = []
+			rows = util.get_files_needing_tags()
+
+			for row in rows:
+				file_view = FileView( None, row )
+				self.scroll.widget().box().insertWidget( 0, file_view )
+				self.file_views.append( file_view )
 
 class TagNest( QtGui.QApplication ):
 

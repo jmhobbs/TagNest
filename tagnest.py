@@ -144,6 +144,10 @@ class TagNestUtil:
 		self.cursor.execute( "UPDATE file SET filename = ?, path = ?, hash = ?, missing = 'N' WHERE id = ?", ( file, path, hash, id ) )
 		self.connection.commit()
 
+	def get_files_needing_tags ( self ):
+		self.cursor.execute( "SELECT id, filename, path FROM file WHERE is_new = 'Y'" )
+		return self.cursor.fetchall()
+
 	def get_fulltext_from_file ( self, filename ):
 
 		t = mimetypes.guess_type( filename )[0]
