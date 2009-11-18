@@ -49,13 +49,14 @@ class BaseWindow ( QtGui.QWidget ):
 
 class VBoxWrapper ( QtGui.QWidget ):
 	def __init__ ( self, parent=None ):
-		QtGui.QWidget.__init__( self, parent );
-		self.vbox = QtGui.QVBoxLayout();
-		self.setLayout( self.vbox );
-		self.vbox.addStretch( 1 );
+		QtGui.QWidget.__init__( self, parent )
+		self.vbox = QtGui.QVBoxLayout()
+		self.setLayout( self.vbox )
+		self.vbox.addStretch( 1 )
+		self.vbox.setSpacing( 0 )
 
 	def box ( self ):
-		return self.vbox;
+		return self.vbox
 
 class LogWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
@@ -84,7 +85,7 @@ class LogWindow ( BaseWindow ):
 
 		self.timer = QtCore.QTimer()
 		QtCore.QObject.connect( self.timer, QtCore.SIGNAL("timeout()"), self.update_logs )
-		self.timer.start( 1000 )
+		self.timer.start( config.getint( 'GUI', 'logrefresh' ) * 1000 )
 
 	# TODO: On show/hide do a refresh?
 	# TODO: How much to show at a time?
@@ -97,15 +98,15 @@ class LogWindow ( BaseWindow ):
 				label = QtGui.QLabel( "%s | %s" % ( time.strftime( '%Y-%m-%d %H:%M:%S', time.localtime( entry[0] ) ), entry[1] ) )
 
 				if entry[2] == util.LOG_INFO:
-					label.setStyleSheet( "QWidget { background-color: #99FFFF }" )
+					label.setStyleSheet( "QWidget { background-color: #99FFFF; border-top: 1px solid #444444; }" )
 				elif entry[2] == util.LOG_EVENT:
-					label.setStyleSheet( "QWidget { background-color: #99FF99 }" )
+					label.setStyleSheet( "QWidget { background-color: #99FF99; border-top: 1px solid #444444; }" )
 				elif entry[2] == util.LOG_WARN:
-					label.setStyleSheet( "QWidget { background-color: #FFFF99 }" )
+					label.setStyleSheet( "QWidget { background-color: #FFFF99; border-top: 1px solid #444444; }" )
 				elif entry[2] == util.LOG_FATAL:
-					label.setStyleSheet( "QWidget { background-color: #FF9999 }" )
+					label.setStyleSheet( "QWidget { background-color: #FF9999; border-top: 1px solid #444444; }" )
 				else:
-					label.setStyleSheet( "QWidget { background-color: #FFCC99 }" )
+					label.setStyleSheet( "QWidget { background-color: #FFCC99; border-top: 1px solid #444444; }" )
 
 				self.scroll.widget().box().insertWidget( 0, label );
 				self.last_log = entry[0]
@@ -119,7 +120,47 @@ class SearchWindow ( BaseWindow ):
 		self.setWindowTitle( "TagNest - Search" );
 		self.resize( 500, 300 );
 
-class NewWindow ( BaseWindow ):
+		hbox = QtGui.QHBoxLayout()
+		vbox = QtGui.QVBoxLayout()
+		vbox.addLayout( hbox )
+
+		vbw = VBoxWrapper()
+		vbw.show()
+
+		self.scroll = QtGui.QScrollArea()
+		self.scroll.setWidgetResizable( True );
+		self.scroll.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOn );
+		self.scroll.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff );
+		self.scroll.setWidget( vbw )
+		vbox.addWidget( self.scroll )
+
+		self.button = QtGui.QPushButton( "Search" )
+		hbox.addWidget( self.button )
+		QtCore.QObject.connect( self.button, QtCore.SIGNAL( 'clicked()' ), self.search )
+
+		self.query = QtGui.QLineEdit()
+		hbox.addWidget( self.query )
+
+		self.setLayout( vbox )
+
+	def search ( self ):
+		self.button.setEnabled( False )
+		self.button.setText( "Searching..." )
+		self.query.setEnabled( False )
+		# TODO: Complete the searching piece here
+
+class FileView ( QtGui.QVBoxLayout ):
+	def __init__ ( self, args, row ):
+		QtGui.QVBoxLayout.__init__( self, args )
+
+		self.data = row
+
+		self.nameLabel = QtGui.QLabel( row[1] )
+		self.addWidget( self.nameLabel )
+		self.pathLabel = QtGui.QLabel( row[2] )
+		self.addWidget( self.pathLabel )
+
+class NeedTagsWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
 		BaseWindow.__init__( self, parent );
 
@@ -145,7 +186,7 @@ class NewWindow ( BaseWindow ):
 
 		self.timer = QtCore.QTimer()
 		QtCore.QObject.connect( self.timer, QtCore.SIGNAL("timeout()"), self.update_list )
-		self.timer.start( 1000 ) # TODO: Config this?
+		self.timer.start( config.getint( 'GUI', 'needtagsrefresh' ) * 1000 )
 
 	def update_list ( self, force=False ):
 		if force or self.isVisible():
@@ -166,15 +207,17 @@ class TagNest( QtGui.QApplication ):
 		util.log( "Log refresh rate: %s" % ( config.getint( 'GUI', 'logrefresh' ) ), util.LOG_INFO )
 
 		self.log_window = LogWindow()
+		self.need_tags_window = NeedTagsWindow()
+		self.search_window = SearchWindow()
 
 		self.menu = QtGui.QMenu();
 
 		self.daemon_control = self.menu.addAction( "" );
 		self.connect( self.daemon_control, QtCore.SIGNAL( "triggered()" ), self.toggle_daemon );
 		item = self.menu.addAction( "Search" );
-		#self.connect( item, QtCore.SIGNAL( "triggered()" ), self.doTimeline );
-		self.pending = self.menu.addAction( "Pending" );
-		#self.connect( item, QtCore.SIGNAL( "triggered()" ), self.doTimeline );
+		self.connect( item, QtCore.SIGNAL( "triggered()" ), self.search_window.show );
+		item = self.menu.addAction( "Need Tags" );
+		self.connect( item, QtCore.SIGNAL( "triggered()" ), self.need_tags_window.show );
 		item = self.menu.addAction( "Log" );
 		self.connect( item, QtCore.SIGNAL( "triggered()" ), self.log_window.show );
 		exitAction = self.menu.addAction( "Exit" );
