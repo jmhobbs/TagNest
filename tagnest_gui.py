@@ -26,6 +26,8 @@ THE SOFTWARE.
 
 
 import sys
+import os
+import platform
 from multiprocessing import Process, freeze_support
 import ConfigParser
 import time
@@ -135,11 +137,41 @@ class FileView ( QtGui.QFrame ):
 		self.tags = QtGui.QLabel( t )
 		hbox.addWidget( self.tags )
 
-		button = QtGui.QPushButton( "Edit Tags" )
+		button = QtGui.QPushButton( QtGui.QIcon( 'resource/icon1616.png' ), '' )
+		QtCore.QObject.connect( button, QtCore.SIGNAL( 'clicked()' ), self.edit_tags )
 		hbox.addWidget( button )
+
+		button = QtGui.QPushButton( QtGui.QIcon( 'resource/exec.png' ), '' )
+		QtCore.QObject.connect( button, QtCore.SIGNAL( 'clicked()' ), self.open_file )
+		hbox.addWidget( button )
+
+		button = QtGui.QPushButton( QtGui.QIcon( 'resource/folder_open.png' ), '' )
+		QtCore.QObject.connect( button, QtCore.SIGNAL( 'clicked()' ), self.open_path )
+		hbox.addWidget( button )
+
 		hbox.setStretch( 0, 1 )
 
 		self.vbox.addLayout( hbox )
+
+	def edit_tags ( self ):
+		print "stub"
+		return
+
+	def open_file ( self ):
+		if 'Windows' == platform.system():
+			os.startfile( self.data['path'] + '/' + self.data['filename'] )
+		else:
+			os.system( "xdg-open '%s'" % self.data['path'] + '/' + self.data['filename'] )
+		# TODO: Macs?
+		return
+
+	def open_path ( self ):
+		if 'Windows' == platform.system():
+			os.startfile( self.data['path'] + '/' )
+		else:
+			os.system( "xdg-open '%s'" % self.data['path'] + '/' )
+		# TODO: Macs?
+		return
 
 class SearchWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
