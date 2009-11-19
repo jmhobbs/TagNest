@@ -26,6 +26,8 @@ THE SOFTWARE.
 # polling is the only thing we can do cross platform right now. If you have
 # suggestions or patches, please get in touch!
 
+# Update: QFileSystemWatcher?
+
 from tagnest import TagNestUtil
 import time
 import os

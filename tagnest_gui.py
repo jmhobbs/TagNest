@@ -119,16 +119,20 @@ class FileView ( QtGui.QFrame ):
 		self.vbox.setSpacing( 0 )
 		self.data = row
 
-		# TODO: Figure out how to make a border, or backgroun or something.
+		# TODO: Figure out how to make a border, or background or something.
 		#self.setStyleSheet( "QWidget { background-color: #CCFFE6; }" )
 		self.setLayout( self.vbox )
 
-		label = QtGui.QLabel( row[2] + row[1] )
+		label = QtGui.QLabel( row['path'] + '/' + row['filename'] )
 		self.vbox.addWidget( label )
 
 		hbox = QtGui.QHBoxLayout()
 
-		self.tags = QtGui.QLabel( 'tags, tags, tags' )
+		t = ''
+		for tag in row['tags']:
+			t = t + tag + ', '
+
+		self.tags = QtGui.QLabel( t )
 		hbox.addWidget( self.tags )
 
 		button = QtGui.QPushButton( "Edit Tags" )
@@ -145,6 +149,8 @@ class SearchWindow ( BaseWindow ):
 
 		self.setWindowTitle( "TagNest - Search" );
 		self.resize( 500, 300 );
+
+		self.file_views = []
 
 		hbox = QtGui.QHBoxLayout()
 		vbox = QtGui.QVBoxLayout()
@@ -173,7 +179,23 @@ class SearchWindow ( BaseWindow ):
 		self.button.setEnabled( False )
 		self.button.setText( "Searching..." )
 		self.query.setEnabled( False )
-		# TODO: Complete the searching piece here
+
+		for file_view in self.file_views:
+			self.scroll.widget().box().removeWidget( file_view )
+			file_view.setParent( None )
+
+		self.file_views = []
+
+		rows = util.search_for_files( self.query.text() )
+
+		for row in rows:
+			file_view = FileView( None, row )
+			self.scroll.widget().box().insertWidget( 0, file_view )
+			self.file_views.append( file_view )
+
+		self.button.setEnabled( True )
+		self.button.setText( "Search" )
+		self.query.setEnabled( True )
 
 class NeedTagsWindow ( BaseWindow ):
 	def __init__ ( self, parent=None ):
@@ -188,9 +210,6 @@ class NeedTagsWindow ( BaseWindow ):
 
 		vbw = VBoxWrapper()
 		vbw.show()
-
-		#f = FileView( None, [ 1, 'file.name', 'files/what/ever/', 'tag, tag, tag'] )
-		#vbw.box().insertWidget( 0, f )
 
 		self.scroll = QtGui.QScrollArea()
 		self.scroll.setWidgetResizable( True );
@@ -208,10 +227,11 @@ class NeedTagsWindow ( BaseWindow ):
 		QtCore.QObject.connect( self.timer, QtCore.SIGNAL("timeout()"), self.update_list )
 		self.timer.start( config.getint( 'GUI', 'needtagsrefresh' ) * 1000 )
 
-	def update_list ( self, force=False ):
+	def update_list ( self, force=False):
 		if force or self.isVisible():
 			for file_view in self.file_views:
 				self.scroll.widget().box().removeWidget( file_view )
+				file_view.setParent( None )
 
 			self.file_views = []
 			rows = util.get_files_needing_tags()

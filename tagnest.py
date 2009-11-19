@@ -146,7 +146,29 @@ class TagNestUtil:
 
 	def get_files_needing_tags ( self ):
 		self.cursor.execute( "SELECT id, filename, path FROM file WHERE is_new = 'Y'" )
-		return self.cursor.fetchall()
+		ret = []
+		for row in self.cursor.fetchall():
+			ret.append( { 'id': row[0], 'filename': row[1], 'path': row[2], 'tags': [] } )
+		return ret
+
+	def search_for_files ( self, query ):
+		words = str( query ).split( ' ' )
+		t = []
+		q = "SELECT id, filename, path FROM file WHERE "
+		for word in words:
+			if '' == word:
+				continue
+			q = q + "filename LIKE ? OR "
+			t.append( '%' + word + '%' )
+
+		q = q[:-3]
+
+		self.cursor.execute( q, t )
+		ret = []
+		for row in self.cursor.fetchall():
+			ret.append( { 'id': row[0], 'filename': row[1], 'path': row[2], 'tags': [] } )
+
+		return ret
 
 	def get_fulltext_from_file ( self, filename ):
 
@@ -164,3 +186,11 @@ class TagNestUtil:
 				r = r + page.extractText()
 
 		return r
+
+
+# TODO: Move from Util to real classes
+#class File:
+
+	#@staticmethod
+	#def f ( arg ):
+		#return
