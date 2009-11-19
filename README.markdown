@@ -13,6 +13,12 @@ TagNest will not edit your files or directories, it just sets up a database that
 ### System Tray ###
 ![v0.1 System Tray](http://github.com/jmhobbs/TagNest/raw/master/screens/0.1/tray.jpg)
 
+### Files Needing Tags ###
+![v0.1 Files Needing Tags](http://github.com/jmhobbs/TagNest/raw/master/screens/0.1/new.jpg)
+
+### Search ###
+![v0.1 Search](http://github.com/jmhobbs/TagNest/raw/master/screens/0.1/search.jpg)
+
 ## Design ##
 
 TagNest is implemented in two pieces, the daemon and the GUI.
