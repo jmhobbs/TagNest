@@ -161,7 +161,7 @@ class FileView ( QtGui.QFrame ):
 		if 'Windows' == platform.system():
 			os.startfile( self.data['path'] + '/' + self.data['filename'] )
 		else:
-			os.system( "xdg-open '%s'" % self.data['path'] + '/' + self.data['filename'] )
+			os.system( "xdg-open '%s'" % ( self.data['path'] + '/' + self.data['filename'] ) )
 		# TODO: Macs?
 		return
 
@@ -169,7 +169,7 @@ class FileView ( QtGui.QFrame ):
 		if 'Windows' == platform.system():
 			os.startfile( self.data['path'] + '/' )
 		else:
-			os.system( "xdg-open '%s'" % self.data['path'] + '/' )
+			os.system( "xdg-open '%s'" % ( self.data['path'] + '/' ) )
 		# TODO: Macs?
 		return
 

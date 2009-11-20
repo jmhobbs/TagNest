@@ -78,8 +78,8 @@ def run ( config ):
 				util.mark_file_as_missing( file, path )
 
 		missing = util.get_missing_files()
-		for file in missing:
-			if False == os.path.isfile( pmatch[1] + pmatch[0]):
+		for pmatch in missing:
+			if False == os.path.isfile( pmatch[1] + "/" + pmatch[0]):
 				util.log( "Daemon: Deleting entry for missing file, %s/%s" % ( pmatch[1], pmatch[0] ), util.LOG_WARN )
 				util.delete_file( pmatch[2] )
 			else:
