@@ -113,6 +113,40 @@ class LogWindow ( BaseWindow ):
 				self.scroll.widget().box().insertWidget( 0, label );
 				self.last_log = entry[0]
 
+class TagWindow ( QtGui.QDialog ):
+	def __init__ ( self, parent=None ):
+		QtGui.QDialog.__init__( self, parent );
+
+		self.setWindowTitle( "TagNest - Tags" );
+		self.resize( 200, 250 );
+
+		vbox = QtGui.QVBoxLayout()
+		label = QtGui.QLabel( "Enter tags, comma seperated." )
+		vbox.addWidget( label )
+
+		self.tag_text = QtGui.QTextEdit()
+		vbox.addWidget( self.tag_text )
+
+		self.quit = QtGui.QPushButton( "Save" )
+		QtCore.QObject.connect( self.quit, QtCore.SIGNAL( 'clicked()' ), self.process_tags )
+		vbox.addWidget( self.quit )
+
+		self.setLayout( vbox )
+
+	def set_row ( self, row ):
+		self.file_id = row['id']
+		for tag in row['tags']:
+			self.tag_text.append( tag + ', ' )
+
+	def process_tags ( self ):
+		tags = self.tag_text.toPlainText().split( ',' )
+		self.tags = []
+		for tag in tags:
+			t = str( tag ).strip()
+			if t != '':
+				self.tags.append( t )
+		self.accept()
+
 class FileView ( QtGui.QFrame ):
 	def __init__ ( self, args, row ):
 		QtGui.QVBoxLayout.__init__( self, args )
@@ -154,7 +188,9 @@ class FileView ( QtGui.QFrame ):
 		self.vbox.addLayout( hbox )
 
 	def edit_tags ( self ):
-		print "stub"
+		edit_tag_window = TagWindow()
+		if edit_tag_window.exec_():
+			util.set_tags_for_file( self.data['id'], edit_tag_window.tags )
 		return
 
 	def open_file ( self ):

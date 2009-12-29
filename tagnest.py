@@ -145,28 +145,49 @@ class TagNestUtil:
 		self.connection.commit()
 
 	def get_files_needing_tags ( self ):
-		self.cursor.execute( "SELECT id, filename, path FROM file WHERE is_new = 'Y'" )
+		self.cursor.execute( "SELECT id, filename, path FROM file WHERE id NOT IN ( SELECT file_id AS id FROM tag )" )
 		ret = []
 		for row in self.cursor.fetchall():
 			ret.append( { 'id': row[0], 'filename': row[1], 'path': row[2], 'tags': [] } )
 		return ret
 
+	def set_tags_for_file ( self, id, tags ):
+		self.cursor.execute( "DELETE FROM tag WHERE file_id = ?", ( id, ) )
+		for tag in tags:
+			self.cursor.execute( "INSERT INTO tag ( file_id, tag ) VALUES ( ?, ? )", ( id, tag ) )
+		self.cursor.execute( "INSERT INTO tag ( file_id, tag ) VALUES ( ?, ? )", ( id, tag ) )
+
 	def search_for_files ( self, query ):
 		words = str( query ).split( ' ' )
 		t = []
 		q = "SELECT id, filename, path FROM file WHERE "
+
+		s = []
+		r = "SELECT file_id FROM tag WHERE "
+
 		for word in words:
 			if '' == word:
 				continue
 			q = q + "filename LIKE ? OR "
 			t.append( '%' + word + '%' )
 
+			r = r + "tag LIKE ? OR "
+			s.append( word )
+
 		q = q[:-3]
+
+		q = q + "OR id IN ( " + r[:-3] + ")"
+		t.extend( s )
 
 		self.cursor.execute( q, t )
 		ret = []
 		for row in self.cursor.fetchall():
-			ret.append( { 'id': row[0], 'filename': row[1], 'path': row[2], 'tags': [] } )
+			c = self.connection.cursor()
+			c.execute( "SELECT DISTINCT tag FROM tag WHERE file_id = ?", ( row[0], ) )
+			tags = []
+			for r in c.fetchall():
+				tags.append( r[0] )
+			ret.append( { 'id': row[0], 'filename': row[1], 'path': row[2], 'tags': tags } )
 
 		return ret
 
