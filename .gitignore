@@ -1,4 +1,4 @@
 *.pyc
 files/*
-pyPDF/*
+pyPdf/*
 *.db3
