@@ -35,10 +35,13 @@ import time
 from PyQt4 import QtCore, QtGui
 
 import tagnest_daemon
+import tagnest_index_daemon
 from tagnest import TagNestUtil
 
 def daemon ():
 	tagnest_daemon.run( config )
+def index_daemon ():
+	tagnest_index_daemon.run( config )
 
 # Base window that doesn't exit the app when closed.
 class BaseWindow ( QtGui.QWidget ):
@@ -317,10 +320,14 @@ class TagNest( QtGui.QApplication ):
 		self.setWindowIcon( QtGui.QIcon( 'resource/icon.png' ) )
 
 		self.daemon = None
+		self.index_daemon = None
 
 		util.log( "GUI Started.", util.LOG_EVENT )
 		util.log( "File root: %s" % ( config.get( 'Shared', 'fileroot' ) ), util.LOG_INFO )
 		util.log( "Log refresh rate: %s" % ( config.getint( 'GUI', 'logrefresh' ) ), util.LOG_INFO )
+
+		if False == config.getboolean( 'IndexDaemon', 'run' ):
+			util.log( "Index daemon is disabled.", util.LOG_WARN )
 
 		self.log_window = LogWindow()
 		self.need_tags_window = NeedTagsWindow()
@@ -356,6 +363,11 @@ class TagNest( QtGui.QApplication ):
 			util.log( "Restarting daemon.", util.LOG_WARN )
 			self.daemon = None
 			self.start_daemon()
+		if None != self.index_daemon and False == self.index_daemon.is_alive():
+			util.log( "Index daemon found dead!", util.LOG_FATAL )
+			util.log( "Restarting index daemon.", util.LOG_WARN )
+			self.index_daemon = None
+			self.start_daemon()
 
 	def toggle_daemon ( self ):
 		if None != self.daemon:
@@ -368,6 +380,10 @@ class TagNest( QtGui.QApplication ):
 			self.daemon.terminate()
 			self.daemon = None
 			util.log( "Daemon stopped by GUI.", util.LOG_EVENT )
+		if None != self.index_daemon:
+			self.index_daemon.terminate()
+			self.index_daemon = None
+			util.log( "Index Daemon stopped by GUI.", util.LOG_EVENT )
 		self.daemon_control.setText( "Start Daemon" )
 
 	def start_daemon ( self ):
@@ -375,6 +391,10 @@ class TagNest( QtGui.QApplication ):
 			self.daemon = Process( target=daemon )
 			self.daemon.start()
 			util.log( "Daemon started by GUI.", util.LOG_EVENT )
+		if None == self.index_daemon and config.getboolean( 'IndexDaemon', 'run' ):
+			self.index_daemon = Process( target=index_daemon )
+			self.index_daemon.start()
+			util.log( "Index Daemon started by GUI.", util.LOG_EVENT )
 		self.daemon_control.setText( "Stop Daemon" )
 
 	def quit_clean( self ):

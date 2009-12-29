@@ -205,9 +205,27 @@ class TagNestUtil:
 			pdf = pyPdf.PdfFileReader( open( filename, "rb" ) )
 			for page in pdf.pages:
 				r = r + page.extractText()
+		else:
+			return None
 
 		return r
 
+	def get_files_pending_index ( self ):
+		self.cursor.execute( "SELECT id, filename, path FROM file WHERE fulltext_state = 'P'" )
+		ret = []
+		for row in self.cursor.fetchall():
+			ret.append( { 'id': row[0], 'filename': row[1], 'path': row[2] } )
+		return ret
+
+	def mark_file_as_bad_mime_type ( self, id ):
+		self.cursor.execute( "UPDATE file SET fulltext_state = 'B' WHERE id = ?", ( id, ) )
+		self.connection.commit()
+
+	def set_file_fulltext ( self, id, fulltext ):
+		self.cursor.execute( "UPDATE file SET fulltext_state = 'C' WHERE id = ?", ( id, ) )
+		self.cursor.execute( "DELETE FROM fulltext WHERE file_id = ?", ( id, ) )
+		self.cursor.execute( "INSERT INTO fulltext ( file_id, fulltext ) VALUES ( ?, ? )", ( id, fulltext ) )
+		self.connection.commit()
 
 # TODO: Move from Util to real classes
 #class File:
