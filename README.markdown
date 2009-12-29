@@ -5,6 +5,9 @@ I am writing this for personal use, but feel free to tinker, use and contribute.
 
 TagNest will not edit your files or directories, it just sets up a database that monitors and tags/indexes them for you to search.
 
+## Status ##
+TagNest currently has a working release, at commit <tt>fa5008920dcace5a23e77e3113149f9aba509149</tt>.  Content indexing is not active in this release, but tagging is.
+
 ## Screen Shots ##
 
 ### Log Window ###
