@@ -176,8 +176,9 @@ class TagNestUtil:
 
 		q = q[:-3]
 
-		q = q + "OR id IN ( " + r[:-3] + ")"
+		q = q + "OR id IN ( " + r[:-3] + ") OR id IN ( SELECT file_id FROM fulltext WHERE fulltext LIKE ? )"
 		t.extend( s )
+		t.append( "%" + str( query ) + "%" )
 
 		self.cursor.execute( q, t )
 		ret = []
