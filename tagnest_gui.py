@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -174,15 +175,15 @@ class FileView ( QtGui.QFrame ):
 		self.tags = QtGui.QLabel( t )
 		hbox.addWidget( self.tags )
 
-		button = QtGui.QPushButton( QtGui.QIcon( 'resource/icon1616.png' ), '' )
+		button = QtGui.QPushButton( QtGui.QIcon( str( sys.path[0] ) + '/resource/icon1616.png' ), '' )
 		QtCore.QObject.connect( button, QtCore.SIGNAL( 'clicked()' ), self.edit_tags )
 		hbox.addWidget( button )
 
-		button = QtGui.QPushButton( QtGui.QIcon( 'resource/exec.png' ), '' )
+		button = QtGui.QPushButton( QtGui.QIcon( str( sys.path[0] ) + '/resource/exec.png' ), '' )
 		QtCore.QObject.connect( button, QtCore.SIGNAL( 'clicked()' ), self.open_file )
 		hbox.addWidget( button )
 
-		button = QtGui.QPushButton( QtGui.QIcon( 'resource/folder_open.png' ), '' )
+		button = QtGui.QPushButton( QtGui.QIcon( str( sys.path[0] ) + '/resource/folder_open.png' ), '' )
 		QtCore.QObject.connect( button, QtCore.SIGNAL( 'clicked()' ), self.open_path )
 		hbox.addWidget( button )
 
@@ -227,6 +228,9 @@ class SearchWindow ( BaseWindow ):
 		vbox = QtGui.QVBoxLayout()
 		vbox.addLayout( hbox )
 
+		self.result_label = QtGui.QLabel('')
+		vbox.addWidget( self.result_label )
+
 		vbw = VBoxWrapper()
 		vbw.show()
 
@@ -247,6 +251,9 @@ class SearchWindow ( BaseWindow ):
 		self.setLayout( vbox )
 
 	def search ( self ):
+		if '' == str( self.query.text() ).strip():
+			return
+
 		self.button.setEnabled( False )
 		self.button.setText( "Searching..." )
 		self.query.setEnabled( False )
@@ -258,6 +265,8 @@ class SearchWindow ( BaseWindow ):
 		self.file_views = []
 
 		rows = util.search_for_files( self.query.text() )
+
+		self.result_label.setText( "Found %d matching files." % len( rows ) )
 
 		for row in rows:
 			file_view = FileView( None, row )
@@ -317,7 +326,7 @@ class TagNest( QtGui.QApplication ):
 	def __init__ ( self, args ):
 		QtGui.QApplication.__init__( self, args )
 
-		self.setWindowIcon( QtGui.QIcon( 'resource/icon.png' ) )
+		self.setWindowIcon( QtGui.QIcon( str( sys.path[0] ) + '/resource/icon.png' ) )
 
 		self.daemon = None
 		self.index_daemon = None
@@ -347,7 +356,7 @@ class TagNest( QtGui.QApplication ):
 		self.connect( exitAction, QtCore.SIGNAL( "triggered()" ), self.quit_clean );
 
 		# Tray icon
-		self.tray = QtGui.QSystemTrayIcon( QtGui.QIcon( "resource/icon.png" ) );
+		self.tray = QtGui.QSystemTrayIcon( QtGui.QIcon( str( sys.path[0] ) + '/resource/icon.png' ) );
 		self.tray.setContextMenu( self.menu );
 		self.tray.show();
 
@@ -405,7 +414,7 @@ class TagNest( QtGui.QApplication ):
 if __name__ == "__main__":
 
 	config = ConfigParser.RawConfigParser()
-	config.read( 'tagnest.config' )
+	config.read( str( sys.path[0] ) + '/tagnest.config' )
 
 	util = TagNestUtil( config.get( 'Shared', 'database' ) )
 
