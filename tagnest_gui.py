@@ -288,29 +288,41 @@ class NeedTagsWindow ( BaseWindow ):
 		self.scroll.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff );
 		self.scroll.setWidget( vbw )
 
-		self.update_list( True )
-
 		vbox = QtGui.QVBoxLayout()
 		vbox.addWidget( self.scroll )
+
+		hbox = QtGui.QHBoxLayout()
+		self.notice = QtGui.QLabel( ' ' )
+		self.refbutton = QtGui.QPushButton( 'Refresh' )
+		self.connect( self.refbutton, QtCore.SIGNAL( "clicked()" ), self.update_list )
+		hbox.addWidget( self.refbutton )
+		hbox.addWidget( self.notice, 1 )
+
+		vbox.addLayout( hbox )
+
 		self.setLayout( vbox )
 
-		self.timer = QtCore.QTimer()
-		QtCore.QObject.connect( self.timer, QtCore.SIGNAL("timeout()"), self.update_list )
-		self.timer.start( config.getint( 'GUI', 'needtagsrefresh' ) * 1000 )
+	def showEvent ( self, event ):
+		self.update_list()
 
-	def update_list ( self, force=False):
-		if force or self.isVisible():
-			for file_view in self.file_views:
-				self.scroll.widget().box().removeWidget( file_view )
-				file_view.setParent( None )
+	def update_list ( self ):
+		self.refbutton.setEnabled( False )
+		self.notice.setText( "Refreshing..." )
 
-			self.file_views = []
-			rows = util.get_files_needing_tags()
+		for file_view in self.file_views:
+			self.scroll.widget().box().removeWidget( file_view )
+			file_view.setParent( None )
 
-			for row in rows:
-				file_view = FileView( None, row )
-				self.scroll.widget().box().insertWidget( 0, file_view )
-				self.file_views.append( file_view )
+		self.file_views = []
+		rows = util.get_files_needing_tags()
+
+		for row in rows:
+			file_view = FileView( None, row )
+			self.scroll.widget().box().insertWidget( 0, file_view )
+			self.file_views.append( file_view )
+
+		self.refbutton.setEnabled( True )
+		self.notice.setText( "Found %d files without tags." % len( rows ) )
 
 class TagNest( QtGui.QApplication ):
 
