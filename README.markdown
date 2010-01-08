@@ -6,12 +6,12 @@ I am writing this for personal use, but feel free to tinker, use and contribute.
 TagNest will not edit your files or directories, it just sets up a database that monitors and tags/indexes them for you to search.
 
 ## Status ##
-TagNest currently has a working release, at commit <tt>bf915f4...</tt>.
+TagNest master should always be working fine. At this point all "wild and crazy" work is done in branches.
 
 ## Setup ##
 * Download TagNest
-* Create an sqlite3 database using <tt>database.sql</tt>
-* Edit the <tt>tagnest.config</tt> file, point it at your root folder.
+* Create the sqlite3 database, i.e. <tt>cat database.sql | sqlite3 your.db.name.here.db3</tt>
+* Edit your <tt>tagnest.config</tt> file, point it at the folder to monitor.
 * Run it!
 * Open the "Need Tags" window, and tag your stuff.
 

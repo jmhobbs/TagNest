@@ -1,0 +1,15 @@
+[Shared]
+; Full path on both of these!
+fileroot: /home/jmhobbs/Documents
+database: /home/jmhobbs/System/opt/TagNest/documents.sqlite3
+
+[Daemon]
+sleep: 60
+
+[IndexDaemon]
+run: true
+sleep: 60
+
+[GUI]
+logrefresh: 1
+needtagsrefresh: 1
